@@ -80,7 +80,8 @@ class OmniauthSoundcloudTest < Minitest::Test
       token: 'access-token',
       refresh_token: 'refresh-token',
       expires_at: 1_772_691_847,
-      expires: true
+      expires: true,
+      params: {}
     )
 
     strategy.define_singleton_method(:access_token) { token }
@@ -91,6 +92,29 @@ class OmniauthSoundcloudTest < Minitest::Test
         'refresh_token' => 'refresh-token',
         'expires_at' => 1_772_691_847,
         'expires' => true
+      },
+      strategy.credentials
+    )
+  end
+
+  def test_credentials_include_refresh_token_when_token_is_non_expiring
+    strategy = build_strategy
+    token = FakeCredentialAccessToken.new(
+      token: 'access-token',
+      refresh_token: 'refresh-token',
+      expires_at: nil,
+      expires: false,
+      params: { 'scope' => 'non-expiring' }
+    )
+
+    strategy.define_singleton_method(:access_token) { token }
+
+    assert_equal(
+      {
+        'token' => 'access-token',
+        'refresh_token' => 'refresh-token',
+        'expires' => false,
+        'scope' => 'non-expiring'
       },
       strategy.credentials
     )
@@ -180,17 +204,22 @@ class OmniauthSoundcloudTest < Minitest::Test
   end
 
   class FakeCredentialAccessToken
-    attr_reader :token, :refresh_token, :expires_at
+    attr_reader :token, :refresh_token, :expires_at, :params
 
-    def initialize(token:, refresh_token:, expires_at:, expires:)
+    def initialize(token:, refresh_token:, expires_at:, expires:, params:)
       @token = token
       @refresh_token = refresh_token
       @expires_at = expires_at
       @expires = expires
+      @params = params
     end
 
     def expires?
       @expires
+    end
+
+    def [](key)
+      { 'scope' => @params['scope'] }[key]
     end
   end
 end

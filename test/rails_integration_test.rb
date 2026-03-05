@@ -16,7 +16,8 @@ class RailsIntegrationSessionsController < ActionController::Base
     auth = request.env.fetch('omniauth.auth')
     render json: {
       uid: auth['uid'],
-      name: auth.dig('info', 'name') || auth.dig('info', 'nickname')
+      name: auth.dig('info', 'name') || auth.dig('info', 'nickname'),
+      credentials: auth['credentials']
     }
   end
 
@@ -98,6 +99,10 @@ class RailsIntegrationTest < Minitest::Test
 
     assert_equal '12345678', payload['uid']
     assert_equal 'Soundcloud User', payload['name']
+    assert_equal 'access-token', payload.dig('credentials', 'token')
+    assert_equal 'refresh-token', payload.dig('credentials', 'refresh_token')
+    assert_equal 'non-expiring', payload.dig('credentials', 'scope')
+    assert(payload.dig('credentials', 'expires'))
 
     assert_requested :post, 'https://secure.soundcloud.com/oauth/token', times: 1
     assert_requested :get, 'https://api.soundcloud.com/me', times: 1
@@ -112,6 +117,7 @@ class RailsIntegrationTest < Minitest::Test
       body: {
         access_token: 'access-token',
         refresh_token: 'refresh-token',
+        scope: 'non-expiring',
         token_type: 'bearer',
         expires_in: 3600
       }.to_json

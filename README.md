@@ -31,7 +31,16 @@ Rails.application.config.middleware.use OmniAuth::Builder do
 end
 ```
 
-You can optionally pass `scope` and `display` in the request query.
+## Provider App Setup
+
+- SoundCloud apps: <https://soundcloud.com/you/apps>
+- OAuth guide: <https://developers.soundcloud.com/docs/api/guide#authentication>
+- Register callback URL (example): `https://your-app.example.com/auth/soundcloud/callback`
+
+## Options
+
+- `scope` (default: `non-expiring`)
+- `display`
 
 ## Auth Hash
 
@@ -52,7 +61,8 @@ Example payload from `request.env['omniauth.auth']` (realistic shape, anonymized
     "token": "eyJ...redacted...xYxvrQ",
     "refresh_token": "A1B2C3D4E5F6",
     "expires_at": 1772691847,
-    "expires": true
+    "expires": true,
+    "scope": "non-expiring"
   },
   "extra": {
     "raw_info": {
@@ -120,6 +130,12 @@ Run Rails integration tests with an explicit Rails version:
 RAILS_VERSION='~> 8.1.0' bundle install
 RAILS_VERSION='~> 8.1.0' bundle exec rake test_rails_integration
 ```
+
+## Test Structure
+
+- `test/omniauth_soundcloud_test.rb`: strategy/unit behavior
+- `test/rails_integration_test.rb`: full Rack/Rails request+callback flow
+- `test/test_helper.rb`: shared test bootstrap
 
 ## Compatibility
 
