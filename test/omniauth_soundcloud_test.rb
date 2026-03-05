@@ -28,13 +28,13 @@ class OmniauthSoundcloudTest < Minitest::Test
     strategy = build_strategy
     payload = {
       'id' => 12_345_678,
-      'username' => 'soundclouder',
-      'full_name' => 'Soundcloud User',
-      'avatar_url' => 'https://example.test/avatar.jpg',
-      'description' => 'hello world',
-      'city' => 'Berlin',
-      'website' => 'https://example.test',
-      'permalink_url' => 'https://soundcloud.com/soundclouder'
+      'username' => 'Sample User',
+      'full_name' => 'Sample User',
+      'avatar_url' => 'https://example.test/avatar-large.jpg',
+      'description' => nil,
+      'city' => nil,
+      'website' => nil,
+      'permalink_url' => 'https://soundcloud.com/sample-user?utm_source=id_123'
     }
 
     strategy.instance_variable_set(:@raw_info, payload)
@@ -42,14 +42,11 @@ class OmniauthSoundcloudTest < Minitest::Test
     assert_equal '12345678', strategy.uid
     assert_equal(
       {
-        name: 'Soundcloud User',
-        nickname: 'soundclouder',
-        image: 'https://example.test/avatar.jpg',
-        description: 'hello world',
-        location: 'Berlin',
+        name: 'Sample User',
+        nickname: 'Sample User',
+        image: 'https://example.test/avatar-large.jpg',
         urls: {
-          SoundCloud: 'https://soundcloud.com/soundclouder',
-          Website: 'https://example.test'
+          SoundCloud: 'https://soundcloud.com/sample-user?utm_source=id_123'
         }
       },
       strategy.info
@@ -61,7 +58,7 @@ class OmniauthSoundcloudTest < Minitest::Test
     strategy = build_strategy
     payload = {
       'id' => 12_345_678,
-      'username' => 'soundclouder',
+      'username' => 'sample-user',
       'full_name' => 'Soundcloud User',
       'description' => ''
     }
@@ -71,9 +68,31 @@ class OmniauthSoundcloudTest < Minitest::Test
     assert_equal(
       {
         name: 'Soundcloud User',
-        nickname: 'soundclouder'
+        nickname: 'sample-user'
       },
       strategy.info
+    )
+  end
+
+  def test_credentials_include_refresh_token_and_expiry_metadata
+    strategy = build_strategy
+    token = FakeCredentialAccessToken.new(
+      token: 'access-token',
+      refresh_token: 'refresh-token',
+      expires_at: 1_772_691_847,
+      expires: true
+    )
+
+    strategy.define_singleton_method(:access_token) { token }
+
+    assert_equal(
+      {
+        'token' => 'access-token',
+        'refresh_token' => 'refresh-token',
+        'expires_at' => 1_772_691_847,
+        'expires' => true
+      },
+      strategy.credentials
     )
   end
 
@@ -157,6 +176,21 @@ class OmniauthSoundcloudTest < Minitest::Test
     def get(path)
       @calls << { path: path }
       Struct.new(:parsed).new(@parsed_payload)
+    end
+  end
+
+  class FakeCredentialAccessToken
+    attr_reader :token, :refresh_token, :expires_at
+
+    def initialize(token:, refresh_token:, expires_at:, expires:)
+      @token = token
+      @refresh_token = refresh_token
+      @expires_at = expires_at
+      @expires = expires
+    end
+
+    def expires?
+      @expires
     end
   end
 end

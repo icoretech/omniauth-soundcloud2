@@ -39,31 +39,69 @@ Example payload from `request.env['omniauth.auth']` (realistic shape, anonymized
 
 ```json
 {
-  "uid": "12345678",
+  "uid": "14743149",
   "info": {
-    "name": "Soundcloud User",
-    "nickname": "soundclouder",
-    "image": "https://i1.sndcdn.com/avatars-example-large.jpg",
-    "location": "Berlin",
+    "name": "Sample Person",
+    "nickname": "Sample Person",
+    "image": "https://i1.sndcdn.com/avatars-000000000000-example-large.jpg",
     "urls": {
-      "SoundCloud": "https://soundcloud.com/soundclouder",
-      "Website": "https://example.test"
+      "SoundCloud": "https://soundcloud.com/sample-person?utm_source=id_12345"
     }
   },
   "credentials": {
-    "token": "sample-access-token",
-    "expires_at": 1710000000,
+    "token": "eyJ...redacted...xYxvrQ",
+    "refresh_token": "A1B2C3D4E5F6",
+    "expires_at": 1772691847,
     "expires": true
   },
   "extra": {
     "raw_info": {
-      "id": 12345678,
-      "username": "soundclouder",
-      "full_name": "Soundcloud User",
-      "avatar_url": "https://i1.sndcdn.com/avatars-example-large.jpg",
-      "city": "Berlin",
-      "website": "https://example.test",
-      "permalink_url": "https://soundcloud.com/soundclouder"
+      "avatar_url": "https://i1.sndcdn.com/avatars-000000000000-example-large.jpg",
+      "id": 14743149,
+      "urn": "soundcloud:users:14743149",
+      "kind": "user",
+      "permalink_url": "https://soundcloud.com/sample-person?utm_source=id_12345",
+      "uri": "https://api.soundcloud.com/users/soundcloud:users:14743149",
+      "username": "Sample Person",
+      "permalink": "sample-person",
+      "created_at": "2012/04/05 16:38:45 +0000",
+      "last_modified": "2016/12/07 19:35:32 +0000",
+      "first_name": "Sample",
+      "last_name": "Person",
+      "full_name": "Sample Person",
+      "city": null,
+      "description": null,
+      "country": null,
+      "track_count": 1,
+      "public_favorites_count": 0,
+      "reposts_count": 0,
+      "followers_count": 8,
+      "followings_count": 1,
+      "plan": "Free",
+      "website_title": null,
+      "website": null,
+      "comments_count": 0,
+      "online": false,
+      "likes_count": 0,
+      "playlist_count": 0,
+      "subscriptions": [
+        {
+          "product": {
+            "id": "free",
+            "name": "Free"
+          }
+        }
+      ],
+      "quota": {
+        "unlimited_upload_quota": false,
+        "upload_seconds_used": 336,
+        "upload_seconds_left": 10464
+      },
+      "private_tracks_count": 5,
+      "private_playlists_count": 1,
+      "primary_email_confirmed": true,
+      "locale": "",
+      "upload_seconds_left": 10464
     }
   }
 }
