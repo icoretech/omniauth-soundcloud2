@@ -1,7 +1,7 @@
 # OmniAuth SoundCloud2 Strategy
 
 [![Test](https://github.com/icoretech/omniauth-soundcloud2/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/icoretech/omniauth-soundcloud2/actions/workflows/test.yml?query=branch%3Amain)
-[![Gem Version](https://img.shields.io/gem/v/omniauth-soundcloud2.svg)](https://rubygems.org/gems/omniauth-soundcloud2)
+[![Gem Version](https://badge.fury.io/rb/omniauth-soundcloud2.svg)](https://badge.fury.io/rb/omniauth-soundcloud2)
 
 `omniauth-soundcloud2` provides a SoundCloud OAuth2 strategy for OmniAuth.
 
