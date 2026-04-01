@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'omniauth/soundcloud2/version'
+require "omniauth/soundcloud2/version"
 
 # Backward compatibility for historical constant usage.
 module Omniauth
