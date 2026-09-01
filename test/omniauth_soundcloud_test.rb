@@ -2,6 +2,8 @@
 
 require_relative "test_helper"
 
+require "base64"
+require "digest"
 require "uri"
 
 class OmniauthSoundcloudTest < Minitest::Test
@@ -18,16 +20,18 @@ class OmniauthSoundcloudTest < Minitest::Test
     assert_equal :request_body, client_options.auth_scheme
   end
 
-  def test_default_scope_is_non_expiring
+  def test_enables_pkce_without_requesting_the_deprecated_non_expiring_scope
     strategy = build_strategy
 
-    assert_equal "non-expiring", strategy.options.scope
+    assert strategy.options.pkce
+    assert_nil strategy.options.scope
   end
 
   def test_uid_info_and_extra_are_derived_from_raw_info
     strategy = build_strategy
     payload = {
       "id" => 12_345_678,
+      "urn" => "soundcloud:users:12345678",
       "username" => "Sample User",
       "full_name" => "Sample User",
       "avatar_url" => "https://example.test/avatar-large.jpg",
@@ -52,6 +56,13 @@ class OmniauthSoundcloudTest < Minitest::Test
       strategy.info
     )
     assert_equal({"raw_info" => payload}, strategy.extra)
+  end
+
+  def test_uid_falls_back_to_the_current_urn_identifier
+    strategy = build_strategy
+    strategy.instance_variable_set(:@raw_info, {"urn" => "soundcloud:users:12345678"})
+
+    assert_equal "soundcloud:users:12345678", strategy.uid
   end
 
   def test_info_handles_sparse_payload_without_optional_fields
@@ -157,9 +168,15 @@ class OmniauthSoundcloudTest < Minitest::Test
     assert_equal 302, status
     location = URI.parse(headers["Location"])
     params = URI.decode_www_form(location.query).to_h
+    verifier = env.fetch("rack.session").fetch("omniauth.pkce.verifier")
+    expected_challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(verifier), padding: false)
 
     assert_equal "secure.soundcloud.com", location.host
     assert_equal "client-id", params.fetch("client_id")
+    assert_equal "code", params.fetch("response_type")
+    assert_equal "S256", params.fetch("code_challenge_method")
+    assert_equal expected_challenge, params.fetch("code_challenge")
+    refute params.key?("scope")
   ensure
     OmniAuth.config.request_validation_phase = previous_request_validation_phase
   end

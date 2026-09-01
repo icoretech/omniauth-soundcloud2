@@ -6,9 +6,9 @@ module OmniAuth
   module Strategies
     # OmniAuth strategy for SoundCloud OAuth2.
     class SoundCloud < OmniAuth::Strategies::OAuth2
-      DEFAULT_SCOPE = "non-expiring"
-
       option :name, "soundcloud"
+      option :pkce, true
+      option :auth_token_params, {header_format: "OAuth %s"}
 
       option :client_options,
         site: "https://api.soundcloud.com",
@@ -24,9 +24,8 @@ module OmniAuth
         }
 
       option :authorize_options, %i[scope state display]
-      option :scope, DEFAULT_SCOPE
 
-      uid { raw_info["id"].to_s }
+      uid { raw_info["id"]&.to_s || raw_info["urn"] }
 
       info do
         {

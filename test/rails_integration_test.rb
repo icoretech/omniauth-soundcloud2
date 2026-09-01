@@ -3,7 +3,9 @@
 require_relative "test_helper"
 
 require "action_controller/railtie"
+require "base64"
 require "cgi"
+require "digest"
 require "json"
 require "logger"
 require "rack/test"
@@ -89,7 +91,12 @@ class RailsIntegrationTest < Minitest::Test
     authorize_uri = URI.parse(last_response["Location"])
 
     assert_equal "secure.soundcloud.com", authorize_uri.host
-    state = CGI.parse(authorize_uri.query).fetch("state").first
+    authorize_params = CGI.parse(authorize_uri.query).transform_values(&:first)
+    state = authorize_params.fetch("state")
+
+    assert_equal "S256", authorize_params.fetch("code_challenge_method")
+    refute_empty authorize_params.fetch("code_challenge")
+    refute authorize_params.key?("scope")
 
     get "/auth/soundcloud/callback", {code: "oauth-test-code", state: state}
 
@@ -101,11 +108,23 @@ class RailsIntegrationTest < Minitest::Test
     assert_equal "Soundcloud User", payload["name"]
     assert_equal "access-token", payload.dig("credentials", "token")
     assert_equal "refresh-token", payload.dig("credentials", "refresh_token")
-    assert_equal "non-expiring", payload.dig("credentials", "scope")
     assert(payload.dig("credentials", "expires"))
 
-    assert_requested :post, "https://secure.soundcloud.com/oauth/token", times: 1
-    assert_requested :get, "https://api.soundcloud.com/me", times: 1
+    assert_requested :post, "https://secure.soundcloud.com/oauth/token", times: 1 do |request|
+      token_params = URI.decode_www_form(request.body).to_h
+      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(token_params.fetch("code_verifier")), padding: false)
+
+      request.headers.fetch("Content-Type").start_with?("application/x-www-form-urlencoded") &&
+        token_params.fetch("grant_type") == "authorization_code" &&
+        token_params.fetch("client_id") == "client-id" &&
+        token_params.fetch("client_secret") == "client-secret" &&
+        token_params.fetch("redirect_uri") == "http://example.org/auth/soundcloud/callback" &&
+        token_params.fetch("code") == "oauth-test-code" &&
+        challenge == authorize_params.fetch("code_challenge")
+    end
+    assert_requested :get, "https://api.soundcloud.com/me", times: 1 do |request|
+      request.headers.fetch("Authorization") == "OAuth access-token"
+    end
   end
 
   private
@@ -117,7 +136,6 @@ class RailsIntegrationTest < Minitest::Test
       body: {
         access_token: "access-token",
         refresh_token: "refresh-token",
-        scope: "non-expiring",
         token_type: "bearer",
         expires_in: 3600
       }.to_json
